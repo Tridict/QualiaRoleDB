@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QualiaRoleDB</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.2/css/bootstrap.min.css" rel="stylesheet">
+  <style type="text/css">
+    [v-cloak] { display: none; }
+    p, table { margin: 0.25em 0 !important;}
+    .card.table-wrap-wrap { display: flex; flex-direction: column; height: 80vh; }
+    .card-body.table-wrap { flex: 1; overflow: auto; }
+    /*.card-body.table-wrap > table { flex: 1; height: 100%; }*/
+    .card-body.table-wrap > table > thead { position: sticky; top: 0; background: rgba(233, 233, 233, 0.9999); }
+    .card-body.table-wrap > table > thead { text-align: center; vertical-align: middle; }
+    .card-body.table-wrap > table > thead > * > * {  }
+    /*.card-body.table-wrap > table > tbody { display: block; flex: 1; overflow: auto; }*/
+    .card-body--images-wrap { border: 1px solid #eee; background: #eee; overflow-x: auto; }
+    .the_card { margin: 1.5rem 0; }
+    .loadmore_card { margin: 1.5rem 0; padding: 1rem; cursor: pointer; }
+    .the_desc { white-space: pre; }
+    .the_pill { margin-right: 0.5em; }
+    .table-sm { font-size: 0.8em; }
+    .reason-type-a { color: #088; }
+    .reason-type-b { color: #880; }
+    .reason-type-c { color: #808; }
+    .reason-type-d { color: #800; }
+    .table-hover > tbody > tr:hover {
+        --bs-table-accent-bg: #ffc;
+        color: initial;
+    }
+    #main-container { margin-top: 2rem; }
+    #main-container .row { margin: 1rem 0; }
+    .text-input-slim { width: 3rem !important; }
+    .content-wrap { margin: 0.5rem 0; }
+    .content-wrap:first-child { margin: 0 0 0.5rem; }
+    .content-wrap:last-child { margin: 0.5rem 0 0; }
+    .image-cards-wrap { white-space: nowrap; }
+    .image-card { width: 240px; margin: 0 1rem 0 0; display: inline-block; }
+    .image-card:last-child { margin: 0; }
+    .image-card .card-body { padding: 0.5rem 0.5rem; }
+    .image-in-card-wrap { margin: 0 auto; width: 220px; height: 200px; display: flex; align-items: center; justify-content: center;}
+    .image-in-card { max-width: 100%; max-height: 100%; }
+  </style>
+</head>
+<body>
+<div id="app">
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container">
+    <a class="navbar-brand" href="#">QualiaRoleDB</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </div>
+</nav>
+<div class="container text-center" id="main-container" v-if="false">
+  <div class="row">
+    <div class="col">
+      <p>……加载中，请稍后……</p>
+    </div>
+  </div>
+</div>
+<div v-cloak class="container" id="main-container">
+
+
+
+<div class="row" v-if="!imported">
+  <div class="col">
+    <label class="form-label">本工具适用于 “<code>汉语形容词句法语义功能信息词典暨检索系统</code>” 数据。本工具并不内含数据，需手动加载。<br/>请使用 Firefox/Safari/Chrome/Edge 之类的比较新型的浏览器，否则可能无法加载。</label>
+  </div>
+</div>
+
+<div class="row" v-if="!imported">
+  <form name="file-form" class="col">
+    <label class="form-label">方案1：请将 <code>汉语名词句法语义功能信息词典暨检索系统v2.0.chm</code> 解压缩为文件夹， 选择该文件夹并载入。</label>
+    <div class="input-group">
+      <input class="form-control" type="file" name="file-input" id="file-input" ref="file_input" multiple webkitdirectory="">
+      <button class="btn btn-primary" type="button" @click="onImportDataFolder">📥 载入</button>
+    </div>
+  </form>
+</div>
+
+<div class="row" v-if="!imported">
+  <form name="file-form-2" class="col">
+    <label class="form-label">方案2：只导入 词典中单个 html 格式的文件，请在此选择并载入。</label>
+    <div class="input-group">
+      <input class="form-control" type="file" name="file-input-2" id="file-input-2" ref="file_input" accept="text/plain, .html">
+      <button class="btn btn-primary" type="button" @click="onImportSingleHtml">📥 载入</button>
+    </div>
+  </form>
+</div>
+
+
+
+<div class="row" v-if="!imported && importError">
+  <div class="col">
+    <label class="form-label">数据载入出错！若无法解决，请联系管理员。</label>
+  </div>
+</div>
+
+
+
+<div class="row" v-if="imported">
+  <div class="col">
+  </div>
+</div>
+
+<div class="row" v-if="imported">
+  <div class="col">
+  </div>
+</div>
+
+<div class="row" v-if="imported">
+  <div class="col">
+  </div>
+</div>
+
+
+
+</div>
+<!-- <script src="https://cdn.bootcdn.net/ajax/libs/BrowserFS/2.0.0/browserfs.min.js"></script>
+<script type="text/javascript">
+  // Installs globals onto window:
+  // * Buffer
+  // * require (monkey-patches if already defined)
+  // * process
+  // You can pass in an arbitrary object if you do not wish to pollute
+  // the global namespace.
+  BrowserFS.install(window);
+  // Configures BrowserFS to use the LocalStorage file system.
+  BrowserFS.configure({
+    fs: "LocalStorage"
+  }, function(e) {
+    if (e) {
+      // An error happened!
+      throw e;
+    }
+    // Otherwise, BrowserFS is ready-to-use!
+  });
+</script> -->
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jschardet/3.0.0/jschardet.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/vue/3.1.5/vue.global.prod.js"></script>
+<!-- <script src="./data.js"></script> -->
+<script type="text/javascript">
+let xx=3;
+</script>
+
+<script type="text/javascript">
+function sleep(time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+function reader_ReadFileAsText(file_wrap, options) {
+  let file = file_wrap.file;
+  options = options || {};
+  return new Promise(function(resolve, reject) {
+    let reader = new FileReader();
+
+    reader.onload = function() {
+      resolve(reader);
+    };
+    reader.onerror = reject;
+
+    if (options.accept && !new RegExp(options.accept).test(file.type)) {
+      reject({
+        code: 1,
+        msg: 'wrong file type'
+      });
+    }
+
+    if (!file.type || /^text\//i.test(file.type)) {
+      reader.readAsText(file, file_wrap.encoding);
+    } else {
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+function reader_ReadFileAsArrayBuffer(file, options) {
+  options = options || {};
+  return new Promise(function(resolve, reject) {
+    let reader = new FileReader();
+
+    reader.onload = function() {
+      resolve(reader);
+    };
+    reader.onerror = reject;
+
+    if (options.accept && !new RegExp(options.accept).test(file.type)) {
+      reject({
+        code: 1,
+        msg: 'wrong file type'
+      });
+    }
+
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function reader_ReadFileAsBinaryString(file, options) {
+  options = options || {};
+  return new Promise(function(resolve, reject) {
+    let reader = new FileReader();
+
+    reader.onload = function() {
+      resolve(reader);
+    };
+    reader.onerror = reject;
+
+    if (options.accept && !new RegExp(options.accept).test(file.type)) {
+      reject({
+        code: 1,
+        msg: 'wrong file type'
+      });
+    }
+
+    reader.readAsBinaryString(file);
+  });
+}
+</script>
+
+<script type="text/javascript">
+const domParser = new DOMParser();
+
+const processJuFaGeShi = (lines=[]) => {
+  let dict = {};
+  let idx = null;
+  let pattern = null;
+  let examples = null;
+  for (let line of lines) {
+    if (line[0]=="S") {
+      [idx, pattern] = line.split(/:|：/).map(x=>x.trim());
+    };
+    if (line[0]=="如") {
+      examples = line.split(/如:|如：/)[1].split(/\||｜/).map(x=>x.trim());
+      dict[idx] = {idx: idx, pattern: pattern, examples: examples};
+      idx = null;
+      pattern = null;
+      examples = null;
+    };
+  };
+  return dict;
+};
+
+const processYuYiJueSe = (lines=[]) => {
+  let dict = {};
+  for (let line of lines) {
+    if (line.length) {
+      let lineSpans = line.split(/:|：/).map(x=>x.trim());
+      let linePair = [lineSpans[0], lineSpans.slice(1,lineSpans.length).join("：")];
+      let key = linePair[0];
+      let value = linePair[1].split(/;|；/).filter(x=>x.length>0);
+      if (key !== "单位UNI" && key !== "构成CON") {
+        value = value.map(x=>x.replace(/([，；。、])?等等([。；])?$/, "").split("、"));
+        // value = value.filter(x=>x.length>0);
+        if (value.length == 1) {
+          value = value[0];
+        };
+      };
+      if (key === "单位UNI") {
+        dict["单位UNI__"] = (value.length == 1) ? value[0] : value;
+        // console.log(value);
+        let uniPairs = value.map(x=>x.replace(/([，；。、])?等等([。；])?$/, "").split(/:|：/));
+        let uniList = [];
+        for (let pair of uniPairs) {
+          // console.log(pair);
+          if (pair.length === 2) {
+            uniList.push({unitType: pair[0], examples: pair[1]?.split("、")});
+          } else if (pair.length === 1) {
+            let xxs = pair[0]?.split("、");
+            if (xxs.length > 1) {
+              uniList.push({examples: xxs});
+            } else if (xxs.length === 1) {
+              uniList.push({UNKNOWN: xxs[0]});
+            };
+          };
+        };
+        value = uniList;
+      };
+      if (key === "构成CON") {
+        // dict["构成CON__"] = value;
+      };
+      dict[key] = value;
+    };
+  };
+  return dict;
+};
+
+async function parseQRDB(html) {
+  const domParser = new DOMParser();
+  const dom = domParser.parseFromString(html, "text/html");
+  const tbody = dom.getElementsByTagName("tbody")[0];
+  const tdPairs = [...tbody.children].map(x=>[...x.children].map(x=>x.innerText)).filter(x=>x.length==2);
+  const dict = {};
+  for (let pair of tdPairs) {
+    let key = pair[0].replace(/：/, "");
+    let value = pair[1].split("\n").filter(x=>x.length>0);
+    if (value.length == 1) {value = value[0]};
+    dict[key] = value;
+  };
+  dict['syntaxPatterns'] = processJuFaGeShi(dict['句法格式']);
+  dict['semanticRoles'] = processYuYiJueSe(dict['语义角色']);
+  let result = dict;
+  return result;
+};
+</script>
+
+<script type="text/javascript">
+const RootComponent = {
+  data() {
+    return {
+      ui: {
+        task: 0,
+      },
+      imported: false,
+      importError: false,
+    }
+  },
+  computed: {
+    xxxx() {
+      return "";
+    },
+  },
+  methods: {
+    exportAllCsv() {
+      let txt = ("\n");
+      // console.log(txt);
+      let file = new File([txt], `xx.csv`, {type: "text/plain;charset=utf-8"});
+      saveAs(file);
+    },
+
+    makeData() {
+    },
+
+    async readFileAsBinaryString (fileWrap, forceEncoding) {
+      let SELF = this;
+      const reader = await reader_ReadFileAsBinaryString(fileWrap.file);
+      // .then((reader) => {
+        // console.log(reader.result);
+        fileWrap.tmp = true;
+        fileWrap.test = reader.result.slice(0, 300);
+        // return fileWrap;
+        // jschardet.detect(the_vue.fileWraps[0].buinaryString.slice(0,100));
+      // })
+      // .then((fileWrap) => {
+        let encoding = forceEncoding ?? jschardet.detect(fileWrap.test).encoding;
+        // return [encoding, fileWrap];
+      // })
+      // .then(([encoding, fileWrap]) => {
+        fileWrap.encoding = encoding;
+        fileWrap.encodingGot = true;
+        fileWrap.test = null;
+        // return fileWrap;
+      // })
+      // .catch((eee) => {
+      //   console.log(eee.error);
+      // });
+    },
+
+    async readFile (fileWrap) {
+      let SELF = this;
+      const reader = await reader_ReadFileAsText(fileWrap);
+      // .then((reader) => {
+        // console.log(reader.result);
+        fileWrap.content = reader.result;
+        fileWrap.contentLength = reader.result.length;
+        fileWrap.dictItem = await parseQRDB(reader.result);
+        fileWrap.readed = true;
+      // })
+      // .catch((eee) => {
+      //   console.log(eee.error);
+      // });
+    },
+
+    async onImportDataFolder() {
+      const SELF = this;
+      console.log("onImportDataFolder");
+
+      const files = document.forms["file-form"]["file-input"].files;
+      const fileWraps = [];
+      for (let file of files) {
+        let fileWrap = {};
+        fileWrap.file = file;
+        fileWrap.name = file.name;
+        //
+        // fileWrap.isUsable = true;
+        // fileWrap.readed = false;
+        // fileWrap.readed2 = false;
+        fileWrap.tmp = false;
+        //
+        fileWrap.encodingGot = false;
+        fileWrap.encoding = "GBK";
+        if (fileWrap.name.includes(".html")) {
+          fileWraps.push(fileWrap);
+        };
+      };
+
+      // let tasks = [];
+      for (let fileWrap of fileWraps) {
+        // let task = async () => {
+          await SELF.readFileAsBinaryString(fileWrap, "GBK");
+          await SELF.readFile(fileWrap);
+        // };
+        // tasks.push(task);
+      };
+      // await Promise.all(tasks.map(x=>x()));
+      // await tasks.forEach(async(x)=>{await x()});
+
+      const dictItems = fileWraps.map(x=>x.dictItem);
+      console.log(dictItems);
+      // console.log(dictItems.map(x=>x.semanticRoles?.构成CON__));
+
+      SELF.imported = true;
+      SELF.importError = false;
+
+      const dict = {};
+      dictItems.forEach(item=>{
+        dict[item['词目']] = item;
+      });
+
+      let txt = JSON.stringify(dict, null, 2);
+      // // console.log(txt);
+      let file = new File([txt], `QRDB.json`, {type: "text/plain;charset=utf-8"});
+      saveAs(file);
+    },
+
+    async onImportSingleHtml() {
+      const SELF = this;
+      console.log("onImportSingleHtml");
+
+      const file = document.forms["file-form-2"]["file-input-2"].files[0];
+        let aFileWrap = {};
+        aFileWrap.file = file;
+        aFileWrap.name = file.name;
+        //
+        // aFileWrap.isUsable = true;
+        // aFileWrap.readed = false;
+        // aFileWrap.readed2 = false;
+        aFileWrap.tmp = false;
+        //
+        aFileWrap.encodingGot = false;
+        aFileWrap.encoding = "GBK";
+
+      await SELF.readFileAsBinaryString(aFileWrap, "GBK")
+      await SELF.readFile(aFileWrap);
+
+      console.log(aFileWrap.dictItem);
+      SELF.imported = true;
+      SELF.importError = false;
+    },
+
+  // methods end
+  },
+};
+const app = Vue.createApp(RootComponent);
+const the_vue = app.mount('#app');
+</script>
+</div>
+</body>
+</html>
