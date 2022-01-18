@@ -49,11 +49,11 @@ function drawSvg(data_, width=800, height=600) {
       let diff = {
         source: nd0.id,
         target: nd1.id,
-        edge: {label: nd0_fc==nd1_fc?"@SAME":"@DIFF"},
+        edge: {label: (nd0_fc==null||nd1_fc==null)?"@NULL":(nd0_fc==nd1_fc?"@SAME":"@DIFF")},
       };
       if (diff.edge.label=="@DIFF") {
         data_diffs.push(diff);
-      } else {
+      } else if (diff.edge.label=="@SAME") {
         data_sames.push(diff);
       };
     };
@@ -66,26 +66,30 @@ function drawSvg(data_, width=800, height=600) {
   const types = Array.from(new Set(links.map(d => d?.edge.label)));
   const color = d3.scaleOrdinal(types, d3.schemeCategory10);
 
+  const count2 = ()=>9;
+  const count3 = ()=>9;
+  const count5 = ()=>9;
+
   const simulation = d3.forceSimulation(nodes)
       // .force("charge", d3.forceManyBody().strength(-200))
       .force("link", d3.forceLink(links)
         .id(d => d.id)
-        .distance(d => 480)
-        // .strength(lk => 1/2)
+        .distance(d => 200)
+        .strength(lk => 1 / Math.min(count2(lk.source), count2(lk.target)))
       )
       .force("link", d3.forceLink(diffs)
         .id(d => d.id)
-        .distance(d => 640)
-        // .strength(lk => 1/2)
+        .distance(d => 960)
+        .strength(lk => 1 / Math.min(count3(lk.source), count3(lk.target)))
       )
       .force("link", d3.forceLink(sames)
         .id(d => d.id)
-        .distance(d => 60)
-        // .strength(lk => 1/2)
+        .distance(d => 200)
+        .strength(lk => 1 / Math.min(count5(lk.source), count5(lk.target)))
       )
       // .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('charge', d3.forceManyBody().strength(-200))
-      .force('collide',d3.forceCollide().radius(20).iterations(2))
+      .force('charge', d3.forceManyBody().strength(-400))
+      .force('collide',d3.forceCollide().radius(16).iterations(1))
       //
       .force("x", d3.forceX())
       .force("y", d3.forceY())
@@ -141,7 +145,7 @@ function drawSvg(data_, width=800, height=600) {
 
   node.append("text")
       .text(d => d.word)
-      .attr("font-size", d => (d.cats)?"1rem":(d.role=="形式FOR"?"0.68rem":"0.68rem"))
+      .attr("font-size", d => (d.cats)?"1rem":(d.role=="形式FOR"?"0.86rem":"0.86rem"))
       .attr("fill", d => (d.cats)?"#000":color(`Item-Role[${d.role}]`))
     .clone(true).lower()
       .attr("fill", "none")
@@ -188,6 +192,7 @@ function drawSvg(data_, width=800, height=600) {
     ;
   };
 
+  simulation.tick(120);
   simulation.on("tick", simFn);
 
   // invalidation.then(() => simulation.stop());

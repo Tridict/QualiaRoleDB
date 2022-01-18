@@ -136,12 +136,22 @@
 
 <div class="row" v-if="imported">
   <div class="col">
+    <div>共有 {{ links.length }} 条关系</div>
+    <div><button type="button" class="btn btn-primary" @click="doDraw">绘图</button></div>
+  </div>
+</div>
+
+<div class="row" v-if="imported">
+  <div class="col">
     <div id="d3wrap"></div>
   </div>
 </div>
 
 <div class="row" v-if="imported">
   <div class="col">
+    <div v-for="link in links">
+      {{ link }}
+    </div>
   </div>
 </div>
 
@@ -187,8 +197,10 @@ const RootComponent = {
     return {
       ui: {
         deepth: 1,
-        word: "月亮",
+        word: "照",
       },
+      links: [],
+      nodes: [],
       imported: false,
       importError: false,
     }
@@ -222,10 +234,23 @@ const RootComponent = {
         wds = result.words;
       };
       //
+      SELF.links = [];
       let links = result.links;
+      let nodes = Array.from(new Set(links.map(link => [JSON.stringify(link.node0), JSON.stringify(link.node1)]).flat()), str => JSON.parse(str));
       // console.log(links);
-      draw(links);
+      // draw(links);
+      for (let link of links) {
+        SELF.links.push(link);
+      };
+      for (let node of nodes) {
+        SELF.nodes.push(node);
+      };
       return(links);
+    },
+
+    doDraw() {
+      const SELF = this;
+      draw(SELF.links);
     },
 
     makeData() {
