@@ -33,28 +33,98 @@ const linkArc = (d) => {
   `;
 }
 
-function drawSvg(data_, width=800, height=600) {
+function drawSvg(data_, forces_=null, width=800, height=600) {
 
   const data = data_ ?? {
     links: [],
     nodes: [],
   };
 
+  const forces = forces_ ?? {
+    countLink: 1,
+    countDiff: 1,
+    countSame: 5,
+    distanceLink: 3,
+    distanceDiff: 50,
+    distanceSame: 3,
+    chargeStrength: -400,
+    collideRadius: 12,
+  };
+
+  console.log(forces);
+
   const data_diffs = [];
   const data_sames = [];
-  for (let nd0 of data.nodes) {
-    let nd0_fc = nd0.role ?? JSON.stringify(nd0.cats);
-    for (let nd1 of data.nodes) {
-      let nd1_fc = nd1.role ?? JSON.stringify(nd1.cats);
-      let diff = {
-        source: nd0.id,
-        target: nd1.id,
-        edge: {label: (nd0_fc==null||nd1_fc==null)?"@NULL":(nd0_fc==nd1_fc?"@SAME":"@DIFF")},
+  // for (let nd0 of data.nodes) {
+  //   let nd0_fc = nd0.role ?? JSON.stringify(nd0.cats);
+  //   for (let nd1 of data.nodes) {
+  //     let nd1_fc = nd1.role ?? JSON.stringify(nd1.cats);
+  //     let diff = {
+  //       source: nd0.id,
+  //       target: nd1.id,
+  //       edge: {label: (nd0_fc==null||nd1_fc==null)?"@NULL":(nd0_fc==nd1_fc?"@SAME":"@DIFF")},
+  //     };
+  //     if (diff.edge.label=="@DIFF") {
+  //       data_diffs.push(diff);
+  //     } else if (diff.edge.label=="@SAME") {
+  //       data_sames.push(diff);
+  //     };
+  //   };
+  // };
+  for (let lk0 of data.links) {
+    let flk = {
+      source: lk0.source,
+      target: lk0.target,
+      edge: {label: "@SAME"},
+    };
+    data_sames.push(flk);
+    for (let lk1 of data.links) {
+      let nosame = true;
+      if (lk0.target==lk1.target) {
+        let flk = {
+          source: lk0.source,
+          target: lk1.source,
+          edge: {label: "@SAME"},
+        };
+        data_sames.push(flk);
+        nosame = false;
+      } else {
+        let flk = {
+          source: lk0.source,
+          target: lk1.source,
+          edge: {label: "@DIFF"},
+        };
+        data_diffs.push(flk);
       };
-      if (diff.edge.label=="@DIFF") {
-        data_diffs.push(diff);
-      } else if (diff.edge.label=="@SAME") {
-        data_sames.push(diff);
+      if (lk0.source==lk1.source && lk0.node1.role == lk1.node1.role) {
+        let flk = {
+          source: lk0.target,
+          target: lk1.target,
+          edge: {label: "@SAME"},
+        };
+        data_sames.push(flk);
+        nosame = false;
+      } else {
+        let flk = {
+          source: lk0.target,
+          target: lk1.target,
+          edge: {label: "@DIFF"},
+        };
+        data_diffs.push(flk);
+      };
+      if (nosame) {
+        let flk_a = {
+          source: lk0.source,
+          target: lk1.target,
+          edge: {label: "@DIFF"},
+        };
+        data_diffs.push(flk_a);
+        let flk_b = {
+          source: lk1.source,
+          target: lk0.target,
+          edge: {label: "@DIFF"},
+        };
+        data_diffs.push(flk_b);
       };
     };
   };
@@ -66,30 +136,30 @@ function drawSvg(data_, width=800, height=600) {
   const types = Array.from(new Set(links.map(d => d?.edge.label)));
   const color = d3.scaleOrdinal(types, d3.schemeCategory10);
 
-  const count2 = ()=>9;
-  const count3 = ()=>9;
-  const count5 = ()=>9;
+  const count2 = ()=> +forces.countLink;
+  const count3 = ()=> +forces.countDiff;
+  const count5 = ()=> +forces.countSame;
 
   const simulation = d3.forceSimulation(nodes)
       // .force("charge", d3.forceManyBody().strength(-200))
       .force("link", d3.forceLink(links)
         .id(d => d.id)
-        .distance(d => 200)
+        .distance(d => +forces.distanceLink)
         .strength(lk => 1 / Math.min(count2(lk.source), count2(lk.target)))
       )
       .force("link", d3.forceLink(diffs)
         .id(d => d.id)
-        .distance(d => 960)
+        .distance(d => +forces.distanceDiff)
         .strength(lk => 1 / Math.min(count3(lk.source), count3(lk.target)))
       )
       .force("link", d3.forceLink(sames)
         .id(d => d.id)
-        .distance(d => 200)
+        .distance(d => +forces.distanceSame)
         .strength(lk => 1 / Math.min(count5(lk.source), count5(lk.target)))
       )
       // .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('charge', d3.forceManyBody().strength(-400))
-      .force('collide',d3.forceCollide().radius(16).iterations(1))
+      .force('charge', d3.forceManyBody().strength(+forces.chargeStrength))
+      .force('collide',d3.forceCollide().radius(+forces.collideRadius).iterations(1))
       //
       .force("x", d3.forceX())
       .force("y", d3.forceY())
@@ -112,7 +182,7 @@ function drawSvg(data_, width=800, height=600) {
       .attr("markerHeight", 6)
       .attr("orient", "auto")
     .append("path")
-      .attr("fill", d => color(d))
+      .attr("fill", label => color(label))
       .attr("d", "M0,-5L10,0L0,5")
   ;
 
@@ -192,8 +262,44 @@ function drawSvg(data_, width=800, height=600) {
     ;
   };
 
-  simulation.tick(120);
+  // simulation.tick(120);
   simulation.on("tick", simFn);
+
+  const legendWrap = svg.append("g");
+  const legend = legendWrap.append("rect")
+      .attr("x", -width/2)
+      .attr("y", -height/2)
+      .attr("width", width)
+      .attr("height", height/20)
+      .attr("stroke", "#eee")
+      .attr("fill", "#eee")
+      .attr("stroke-width", 0)
+  ;
+  let wStep = width/types.length;
+  for (let ix=0; ix<types.length; ix++) {
+    let tp = types[ix];
+    let clr = color(tp);
+    legendWrap.append("rect")
+        .attr("x", -width/2 + ix*wStep)
+        .attr("y", -height/2)
+        .attr("width", wStep)
+        .attr("height", height/20)
+        .attr("stroke", clr)
+        .attr("fill", clr)
+        .attr("stroke-width", 0)
+    ;
+    legendWrap.append("text")
+        .text(tp)
+        .attr("font-size", "1rem")
+        .attr("x", -width/2 + ix*wStep + 4)
+        .attr("y", -height/2 + 20)
+        .attr("fill", "#fff")
+      .clone(true).lower()
+        .attr("fill", "none")
+        .attr("stroke", "#000")
+        .attr("stroke-width", 5)
+    ;
+  };
 
   // invalidation.then(() => simulation.stop());
   return svg.node();
@@ -528,7 +634,7 @@ function drawSvg(data_, width=800, height=600) {
 
 
 
-function draw(links_) {
+function draw(links_, forces) {
   const links = Object.create(links_);
   links.forEach(link=>{
     link.source = JSON.stringify(link.node0);
@@ -544,7 +650,7 @@ function draw(links_) {
   });
   const d3wrap = d3.select("#d3wrap");
   d3wrap.selectAll("svg").remove();
-  const svg = drawSvg(data);
+  const svg = drawSvg(data, forces);
   d3wrap.node().append(svg);
   // const canvg = drawCanvg(data);
   // d3wrap.node().append(canvg);
